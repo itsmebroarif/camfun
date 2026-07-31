@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>HoloGesture Bojong</title>
+    <title>HoloGesture Engine - Exhibition</title>
     <!-- Tailwind CSS for UI Layout -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- GSAP for UI Animations -->
@@ -15,8 +15,8 @@
         :root {
             --neon-blue: #00f3ff;
             --neon-magenta: #ff00ea;
-            --dark-bg: #05050a;
-            --grid-color: rgba(0, 243, 255, 0.1);
+            --dark-bg: #030305;
+            --grid-color: rgba(0, 243, 255, 0.05);
         }
 
         body, html {
@@ -41,16 +41,16 @@
             background-image: 
                 linear-gradient(var(--grid-color) 1px, transparent 1px),
                 linear-gradient(90deg, var(--grid-color) 1px, transparent 1px);
-            background-size: 50px 50px;
+            background-size: 60px 60px;
             transform: perspective(500px) rotateX(60deg) translateY(-100px) translateZ(-200px);
-            animation: gridMove 20s linear infinite;
+            animation: gridMove 15s linear infinite;
             z-index: 0;
             pointer-events: none;
         }
 
         @keyframes gridMove {
             0% { transform: perspective(500px) rotateX(60deg) translateY(0) translateZ(-200px); }
-            100% { transform: perspective(500px) rotateX(60deg) translateY(50px) translateZ(-200px); }
+            100% { transform: perspective(500px) rotateX(60deg) translateY(60px) translateZ(-200px); }
         }
 
         /* Main Render Canvas */
@@ -80,60 +80,78 @@
         }
 
         #webcam {
-            /* Mirror the video */
             transform: scaleX(-1);
             min-width: 100%;
             min-height: 100%;
             width: auto;
             height: auto;
             position: absolute;
-            /* Default Holo Theme (subtle) */
-            filter: contrast(1.1) saturate(1.2) brightness(0.9);
+            filter: contrast(1.1) saturate(1.1) brightness(0.8);
             transition: filter 0.5s ease;
+            object-fit: cover;
         }
 
         /* --- THEME CLASSES --- */
-        .theme-bw { filter: grayscale(100%) contrast(1.2) !important; }
-        .theme-negative { filter: invert(100%) !important; }
-        .theme-sepia { filter: sepia(100%) contrast(0.9) !important; }
-        .theme-rainbow { animation: rainbow-shift 5s linear infinite !important; }
+        .theme-bw { filter: grayscale(100%) contrast(1.3) !important; }
+        .theme-negative { filter: invert(100%) hue-rotate(180deg) !important; }
+        .theme-sepia { filter: sepia(100%) contrast(1.1) brightness(0.9) !important; }
+        .theme-rainbow { animation: rainbow-shift 4s linear infinite !important; }
+        
         @keyframes rainbow-shift {
             0% { filter: hue-rotate(0deg) saturate(1.5); }
             100% { filter: hue-rotate(360deg) saturate(1.5); }
         }
 
-        /* VHS Effect */
-        .theme-vhs { filter: contrast(1.4) brightness(1.1) saturate(1.2) sepia(0.2) !important; }
+        .theme-vhs { filter: contrast(1.5) brightness(1.1) saturate(1.3) sepia(0.3) !important; }
         .theme-vhs::after {
-            content: ""; position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            background-image: linear-gradient(transparent 50%, rgba(0, 0, 0, 0.1) 50%);
+            content: ""; position: absolute; inset: 0;
+            background-image: linear-gradient(transparent 50%, rgba(0, 0, 0, 0.15) 50%);
             background-size: 100% 4px; pointer-events: none;
-            animation: vhs-scanlines 0.2s linear infinite; z-index: 2; opacity: 0.3;
+            animation: vhs-scanlines 0.2s linear infinite; z-index: 2; opacity: 0.5;
         }
         @keyframes vhs-scanlines {
             0% { transform: translateY(0); }
             100% { transform: translateY(4px); }
         }
 
-        /* Vignette Effect */
         .theme-vignette {
-            mask-image: radial-gradient(circle, rgba(0,0,0,1) 60%, rgba(0,0,0,0) 100%);
-            -webkit-mask-image: radial-gradient(circle, rgba(0,0,0,1) 60%, rgba(0,0,0,0) 100%);
+            mask-image: radial-gradient(circle, rgba(0,0,0,1) 50%, rgba(0,0,0,0) 100%);
+            -webkit-mask-image: radial-gradient(circle, rgba(0,0,0,1) 50%, rgba(0,0,0,0) 100%);
         }
 
-        /* General Color Animation */
-        .animate-colors { animation: hue-cycle 10s linear infinite; }
-        @keyframes hue-cycle {
-            0% { filter: hue-rotate(0deg); }
-            100% { filter: hue-rotate(360deg); }
+        /* --- TADC ABSTRACTION THEME --- */
+        .theme-tadc { 
+            animation: tadc-glitch 0.3s infinite steps(2) !important; 
+        }
+        @keyframes tadc-glitch {
+            0% { 
+                filter: contrast(2) saturate(3) hue-rotate(0deg) brightness(1.2); 
+                transform: scaleX(-1) translate(0px, 0px) scale(1.02);
+            }
+            25% { 
+                filter: contrast(2.5) saturate(4) hue-rotate(45deg) brightness(1.5) invert(0.1); 
+                transform: scaleX(-1) translate(3px, -2px) scale(1.04);
+            }
+            50% { 
+                filter: contrast(3) saturate(5) hue-rotate(90deg) brightness(1.1); 
+                transform: scaleX(-1) translate(-3px, 3px) scale(1.01);
+            }
+            75% { 
+                filter: contrast(2) saturate(4) hue-rotate(-45deg) brightness(1.4) sepia(0.5); 
+                transform: scaleX(-1) translate(2px, 2px) scale(1.03);
+            }
+            100% { 
+                filter: contrast(2) saturate(3) hue-rotate(0deg) brightness(1.2); 
+                transform: scaleX(-1) translate(0px, 0px) scale(1.02);
+            }
         }
 
         /* HUD Styling */
         .hud-panel {
-            background: rgba(5, 5, 10, 0.6);
+            background: rgba(3, 3, 5, 0.7);
             border: 1px solid var(--neon-blue);
-            box-shadow: 0 0 10px rgba(0, 243, 255, 0.2), inset 0 0 20px rgba(0, 243, 255, 0.1);
-            backdrop-filter: blur(4px);
+            box-shadow: 0 0 10px rgba(0, 243, 255, 0.1), inset 0 0 15px rgba(0, 243, 255, 0.05);
+            backdrop-filter: blur(5px);
             z-index: 20;
         }
 
@@ -153,33 +171,65 @@
         button.action-btn:active { transform: scale(0.95); }
 
         select {
-            background-color: rgba(0, 0, 0, 0.3); color: var(--neon-blue);
-            border: 1px solid var(--neon-blue); padding: 2px 5px;
+            background-color: rgba(0, 0, 0, 0.5); color: var(--neon-blue);
+            border: 1px solid var(--neon-blue); padding: 4px;
             border-radius: 4px; font-family: 'Share Tech Mono', monospace; font-size: 0.8rem;
+            width: 100%;
         }
         select:focus { outline: none; box-shadow: 0 0 10px var(--neon-blue); }
 
         input[type=range] { -webkit-appearance: none; width: 100%; background: transparent; }
         input[type=range]::-webkit-slider-thumb {
-            -webkit-appearance: none; height: 16px; width: 16px; border-radius: 50%;
-            background: var(--neon-blue); box-shadow: 0 0 10px var(--neon-blue);
-            cursor: pointer; margin-top: -6px;
+            -webkit-appearance: none; height: 14px; width: 14px; border-radius: 50%;
+            background: var(--neon-blue); box-shadow: 0 0 8px var(--neon-blue);
+            cursor: pointer; margin-top: -5px;
         }
         input[type=range]::-webkit-slider-runnable-track {
             width: 100%; height: 4px; cursor: pointer;
-            background: rgba(0, 243, 255, 0.3); border-radius: 2px;
+            background: rgba(0, 243, 255, 0.2); border-radius: 2px;
         }
-        
-        .checkbox-label { display: flex; align-items: center; font-size: 0.8rem; cursor: pointer; }
-        .checkbox-label input { margin-right: 8px; width: 14px; height: 14px; }
 
-        /* Loading Screen */
-        #loading {
-            position: absolute; inset: 0; background: var(--dark-bg); z-index: 50;
+        /* INTRO SCREEN (Exhibition Mode) */
+        #intro-screen {
+            position: absolute; inset: 0; background: #000; z-index: 100;
             display: flex; flex-direction: column; align-items: center; justify-content: center;
         }
+        
+        .intro-title {
+            font-size: 4rem; letter-spacing: 0.2em; text-align: center;
+            color: transparent; -webkit-text-stroke: 1px var(--neon-blue);
+            text-shadow: 0 0 20px rgba(0,243,255,0.4); margin-bottom: 0.5rem;
+        }
+        
+        .intro-subtitle {
+            font-size: 1.2rem; color: var(--neon-magenta); letter-spacing: 0.3em;
+            margin-bottom: 3rem; text-shadow: 0 0 10px var(--neon-magenta);
+        }
+
+        .author-text {
+            position: absolute; bottom: 2rem; font-size: 0.9rem;
+            color: rgba(255,255,255,0.5); letter-spacing: 0.1em;
+        }
+
+        .start-btn {
+            padding: 15px 40px; font-size: 1.2rem; font-family: inherit;
+            background: transparent; color: var(--neon-blue);
+            border: 2px solid var(--neon-blue); cursor: pointer;
+            letter-spacing: 2px; transition: 0.3s;
+            box-shadow: 0 0 15px rgba(0,243,255,0.2), inset 0 0 15px rgba(0,243,255,0.1);
+        }
+        .start-btn:hover {
+            background: var(--neon-blue); color: #000;
+            box-shadow: 0 0 30px var(--neon-blue); transform: scale(1.05);
+        }
+
+        /* Loading Overlay */
+        #loading {
+            position: absolute; inset: 0; background: rgba(0,0,0,0.8); z-index: 90;
+            display: none; flex-direction: column; align-items: center; justify-content: center;
+        }
         .loader-ring {
-            width: 100px; height: 100px; border: 4px solid transparent;
+            width: 80px; height: 80px; border: 3px solid transparent;
             border-top-color: var(--neon-blue); border-bottom-color: var(--neon-magenta);
             border-radius: 50%; animation: spin 1s linear infinite;
         }
@@ -188,117 +238,110 @@
 </head>
 <body>
 
+    <!-- Exhibition Intro Screen -->
+    <div id="intro-screen">
+        <div class="hologrid" style="z-index: -1; opacity: 0.3;"></div>
+        <h1 class="intro-title">HOLOGESTURE</h1>
+        <h2 class="intro-subtitle">SPATIAL COMPUTING ENGINE</h2>
+        
+        <button id="btn-start" class="start-btn">INITIALIZE SYSTEM</button>
+        
+        <div class="author-text">CREATED BY ARIF ALEXANDER</div>
+    </div>
+
     <div class="hologrid"></div>
     
     <!-- Webcam Video Container -->
     <div id="webcam-container">
-        <video id="webcam" autoplay playsinline></video>
+        <!-- We will start video after user interaction to respect browser autoplay policies -->
+        <video id="webcam" playsinline></video>
     </div>
     
     <canvas id="holo-canvas"></canvas>
 
-    <!-- Loading Screen -->
+    <!-- Loading Overlay -->
     <div id="loading">
         <div class="loader-ring mb-4"></div>
-        <h1 class="text-2xl tracking-widest hud-text">INITIALIZING HOLOGESTURE V2</h1>
-        <p class="text-sm mt-2 text-cyan-400 opacity-70" id="loading-status">Loading MediaPipe Tasks Vision...</p>
+        <p class="text-sm mt-2 text-cyan-400 tracking-widest" id="loading-status">Booting Neural Network...</p>
     </div>
 
     <!-- Top Left HUD -->
-    <div class="absolute top-4 left-4 p-4 w-72 hud-panel rounded-lg flex flex-col gap-2 pointer-events-auto">
-        <h2 class="text-xl font-bold border-b border-cyan-500 pb-2 mb-2 tracking-wider">SYSTEM STATUS</h2>
+    <div class="absolute top-4 left-4 p-4 w-72 hud-panel rounded-lg flex flex-col gap-2 pointer-events-auto hidden" id="main-hud">
+        <h2 class="text-xl font-bold border-b border-cyan-500 pb-2 mb-1 tracking-wider">SYSTEM STATUS</h2>
         
-        <div class="flex justify-between text-sm">
-            <span>FPS:</span> <span id="ui-fps" class="hud-text">00.0</span>
-        </div>
-        <div class="flex justify-between text-sm">
-            <span>TRACKING:</span> <span id="ui-tracking" class="hud-text-alert">OFFLINE</span>
-        </div>
-        <div class="flex justify-between text-sm">
-            <span>HANDS DETECTED:</span> <span id="ui-hands" class="hud-text">0</span>
-        </div>
+        <div class="flex justify-between text-sm"><span>FPS:</span> <span id="ui-fps" class="hud-text">00.0</span></div>
+        <div class="flex justify-between text-sm"><span>TRACKING:</span> <span id="ui-tracking" class="hud-text-alert">OFFLINE</span></div>
         
         <!-- Object Spawner Section -->
         <div class="mt-2 border-t border-cyan-800 pt-3">
-            <h3 class="text-xs text-cyan-500 mb-2 font-bold tracking-widest">SPAWN HOLO-OBJECTS</h3>
+            <h3 class="text-[10px] text-cyan-500 mb-2 font-bold tracking-widest">HOLO-OBJECTS (PINCH TO GRAB)</h3>
             <div class="grid grid-cols-3 gap-2">
                 <button id="btn-spawn-box" class="action-btn px-2 py-1 rounded text-xs font-bold">BOX</button>
                 <button id="btn-spawn-circle" class="action-btn px-2 py-1 rounded text-xs font-bold">CIRCLE</button>
-                <button id="btn-spawn-tri" class="action-btn px-2 py-1 rounded text-xs font-bold">TRIANGLE</button>
+                <button id="btn-spawn-tri" class="action-btn px-2 py-1 rounded text-xs font-bold">POLY</button>
             </div>
-            <p class="text-[10px] mt-2 text-cyan-200 opacity-70">Hint: Pinch to grab objects. Swipe to hit.</p>
         </div>
 
         <div class="mt-2 border-t border-cyan-800 pt-2 flex gap-4">
             <div class="flex-1">
                 <h3 class="text-[10px] text-cyan-500 mb-1">L-HAND</h3>
-                <div class="text-xs" id="ui-l-state">IDLE</div>
+                <div class="text-xs font-bold" id="ui-l-state">IDLE</div>
             </div>
             <div class="flex-1">
                 <h3 class="text-[10px] text-cyan-500 mb-1">R-HAND</h3>
-                <div class="text-xs" id="ui-r-state">IDLE</div>
+                <div class="text-xs font-bold" id="ui-r-state">IDLE</div>
             </div>
         </div>
     </div>
 
     <!-- Bottom Right Settings Panel -->
-    <div class="absolute bottom-4 right-4 p-4 w-80 hud-panel rounded-lg flex flex-col gap-3 transition-transform origin-bottom-right pointer-events-auto" id="settings-panel">
+    <div class="absolute bottom-4 right-4 p-4 w-72 hud-panel rounded-lg flex flex-col gap-3 transition-transform origin-bottom-right pointer-events-auto hidden" id="settings-panel">
         <div class="flex justify-between items-center border-b border-cyan-500 pb-2">
-            <h2 class="text-lg font-bold tracking-wider">CALIBRATION</h2>
+            <h2 class="text-md font-bold tracking-wider">CALIBRATION</h2>
             <button id="btn-toggle-settings" class="text-[10px] border border-cyan-500 px-2 py-1 rounded hover:bg-cyan-900 transition-colors">HIDE</button>
         </div>
         
         <div class="flex flex-col gap-1">
-            <label class="text-xs flex justify-between"><span>Visual Theme</span></label>
+            <label class="text-[10px] text-cyan-500">VISUAL THEME</label>
             <select id="sel-theme">
-                <option value="holo">Holo (Default)</option>
-                <option value="bw">Black & White</option>
-                <option value="negative">Negative</option>
-                <option value="sepia">Sepia</option>
-                <option value="rainbow">Rainbow</option>
-                <option value="vhs">VHS</option>
-                <option value="vignette">Vignette</option>
+                <option value="holo">Holographic (Default)</option>
+                <option value="tadc">TADC (Abstraction)</option>
+                <option value="bw">Monochrome</option>
+                <option value="vhs">Retro VHS</option>
+                <option value="rainbow">RGB Shift</option>
+                <option value="negative">Inverted</option>
             </select>
         </div>
 
-        <div class="flex flex-col gap-1">
-            <label class="checkbox-label">
-                <input type="checkbox" id="cb-animate-theme"> Animate Colors
-            </label>
-        </div>
-
-        <div class="flex flex-col gap-1 border-t border-cyan-800 pt-2">
-            <label class="text-xs flex justify-between"><span>Motion Smoothing</span> <span id="val-smooth">0.20</span></label>
-            <input type="range" id="sl-smooth" min="0.01" max="0.5" step="0.01" value="0.20">
+        <div class="flex flex-col gap-1 border-t border-cyan-900 pt-2">
+            <label class="text-xs flex justify-between"><span>Smoothing</span> <span id="val-smooth">0.25</span></label>
+            <input type="range" id="sl-smooth" min="0.05" max="0.5" step="0.01" value="0.25">
         </div>
         
         <div class="flex flex-col gap-1">
-            <label class="text-xs flex justify-between"><span>Pinch Threshold</span> <span id="val-pinch">0.06</span></label>
-            <input type="range" id="sl-pinch" min="0.02" max="0.15" step="0.01" value="0.06">
+            <label class="text-xs flex justify-between"><span>Pinch Sensitivity</span> <span id="val-pinch">0.07</span></label>
+            <input type="range" id="sl-pinch" min="0.03" max="0.15" step="0.01" value="0.07">
         </div>
         
-        <button id="btn-clear-objects" class="action-btn px-2 py-1 mt-2 rounded text-xs font-bold w-full">CLEAR ALL OBJECTS</button>
+        <button id="btn-clear-objects" class="action-btn px-2 py-1 mt-1 rounded text-[10px] font-bold w-full">CLEAR ALL ENTITIES</button>
     </div>
 
-    <button id="btn-show-settings" class="absolute bottom-4 right-4 hud-panel px-4 py-2 rounded-lg font-bold text-sm hidden hover:bg-cyan-900 transition-colors z-30 pointer-events-auto">
+    <button id="btn-show-settings" class="absolute bottom-4 right-4 hud-panel px-4 py-2 rounded-lg font-bold text-xs hidden hover:bg-cyan-900 transition-colors z-30 pointer-events-auto">
         SETTINGS
     </button>
 
     <script type="module">
         import { FilesetResolver, HandLandmarker } from "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.3/vision_bundle.mjs";
 
-        // --- CONFIGURATION & STATE ---
         const CONFIG = {
-            smoothing: 0.20,
-            pinchThreshold: 0.06,
+            smoothing: 0.25,      // Higher = smoother but laggy, Lower = responsive but jittery
+            pinchThreshold: 0.07, // AI Distance for pinch
             glowIntensity: 15,
-            maxParticles: 150,
-            beamDistance: 400,
-            currentTheme: 'holo',
-            animateTheme: false
+            maxParticles: 80,     // Optimized for exhibition performance
+            currentTheme: 'holo'
         };
 
-        // We now track 6 core points per hand: Palm + 5 fingertips
+        // 6 Nodes for complete hand wireframe
         const TRACKED_NODES = ['palm', 'thumb', 'index', 'middle', 'ring', 'pinky'];
         const MP_LANDMARKS = { palm: 0, thumb: 4, index: 8, middle: 12, ring: 16, pinky: 20 };
 
@@ -308,176 +351,131 @@
             return state;
         };
 
-        const STATE = {
-            left: createHandState(),
-            right: createHandState(),
-            fps: 0,
-            handCount: 0
-        };
+        const STATE = { left: createHandState(), right: createHandState(), handCount: 0 };
+        const targets = { left: createHandState(), right: createHandState() }; // For smoothing interpolation
 
-        const targets = { left: createHandState(), right: createHandState() };
-
-        // --- MATH & UTILS ---
         const MathUtils = {
             lerp: (start, end, amt) => (1 - amt) * start + amt * end,
-            dist: (p1, p2) => Math.sqrt(Math.pow(p2.x - p1.x, 2) + Math.pow(p2.y - p1.y, 2)),
-            dist3D: (p1, p2) => Math.sqrt(Math.pow(p2.x - p1.x, 2) + Math.pow(p2.y - p1.y, 2) + Math.pow(p2.z - p1.z, 2)),
+            dist: (p1, p2) => Math.hypot(p2.x - p1.x, p2.y - p1.y), // Optimized
+            dist3D: (p1, p2) => Math.hypot(p2.x - p1.x, p2.y - p1.y, p2.z - p1.z),
             random: (min, max) => Math.random() * (max - min) + min
         };
 
-        // --- PARTICLE ENGINE ---
         class ParticleSystem {
             constructor() { this.particles = []; }
-            
             emit(x, y, color, count = 1, isShockwave = false) {
                 if(this.particles.length >= CONFIG.maxParticles && !isShockwave) return;
                 for(let i=0; i<count; i++) {
                     const angle = MathUtils.random(0, Math.PI * 2);
-                    const speed = isShockwave ? MathUtils.random(5, 15) : MathUtils.random(0.5, 3);
+                    const speed = isShockwave ? MathUtils.random(3, 10) : MathUtils.random(0.5, 2);
                     this.particles.push({
-                        x, y,
-                        vx: Math.cos(angle) * speed,
-                        vy: Math.sin(angle) * speed,
-                        life: 1.0,
-                        decay: isShockwave ? MathUtils.random(0.02, 0.05) : MathUtils.random(0.01, 0.03),
-                        color, size: MathUtils.random(1, 4)
+                        x, y, vx: Math.cos(angle) * speed, vy: Math.sin(angle) * speed,
+                        life: 1.0, decay: isShockwave ? 0.03 : 0.02, color, size: MathUtils.random(1, 3)
                     });
                 }
             }
-
             updateAndDraw(ctx) {
+                // Optimization: Don't set shadowBlur for particles to save GPU
+                ctx.shadowBlur = 0; 
                 for (let i = this.particles.length - 1; i >= 0; i--) {
                     const p = this.particles[i];
                     p.x += p.vx; p.y += p.vy; p.life -= p.decay;
                     if (p.life <= 0) { this.particles.splice(i, 1); continue; }
-
-                    ctx.beginPath();
-                    ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
                     ctx.fillStyle = p.color.replace(')', `, ${p.life})`).replace('rgb', 'rgba');
-                    ctx.shadowBlur = CONFIG.glowIntensity / 2;
-                    ctx.shadowColor = p.color;
-                    ctx.fill();
+                    ctx.beginPath(); ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2); ctx.fill();
                 }
             }
         }
         const particles = new ParticleSystem();
 
-        // --- HOLO SHAPE SYSTEM ---
         class HoloShape {
             constructor(type) {
-                this.type = type; // 'box', 'circle', 'triangle'
+                this.type = type;
                 this.x = window.innerWidth / 2 + MathUtils.random(-100, 100);
                 this.y = window.innerHeight / 2 + MathUtils.random(-100, 100);
-                this.vx = MathUtils.random(-3, 3);
-                this.vy = MathUtils.random(-3, 3);
-                this.size = MathUtils.random(40, 60);
-                this.rotation = MathUtils.random(0, Math.PI);
-                this.vrot = MathUtils.random(-0.05, 0.05);
-                this.color = ['#00f3ff', '#ff00ea', '#00ff66'][Math.floor(Math.random()*3)];
-                this.grabbedBy = null; // 'left' or 'right'
+                this.vx = MathUtils.random(-2, 2); this.vy = MathUtils.random(-2, 2);
+                this.size = MathUtils.random(40, 70);
+                this.rotation = 0; this.vrot = MathUtils.random(-0.03, 0.03);
+                
+                // TADC Mode colors or normal
+                const isTADC = CONFIG.currentTheme === 'tadc';
+                const colors = isTADC ? ['#ff0000', '#0000ff', '#ffff00'] : ['#00f3ff', '#ff00ea', '#00ff66'];
+                this.color = colors[Math.floor(Math.random()*colors.length)];
+                this.grabbedBy = null;
             }
 
             update() {
-                // If grabbed, stick to the pinch midpoint
                 if (this.grabbedBy) {
                     const hand = STATE[this.grabbedBy];
                     if (hand.active && hand.isPinched) {
                         const midX = (hand.nodes.index.x + hand.nodes.thumb.x) / 2;
                         const midY = (hand.nodes.index.y + hand.nodes.thumb.y) / 2;
-                        // Smooth follow to pinch
-                        this.x = MathUtils.lerp(this.x, midX, 0.5);
-                        this.y = MathUtils.lerp(this.y, midY, 0.5);
+                        this.x = MathUtils.lerp(this.x, midX, 0.4);
+                        this.y = MathUtils.lerp(this.y, midY, 0.4);
                         this.vx = 0; this.vy = 0;
-                        particles.emit(this.x, this.y, this.color, 1); // Emit sparks while grabbed
-                        return; // Skip normal physics
+                        if(Math.random()>0.5) particles.emit(this.x, this.y, this.color, 1);
+                        return;
                     } else {
-                        this.grabbedBy = null; // Dropped
+                        this.grabbedBy = null; // Released
                     }
                 }
 
-                // Normal Physics
-                this.x += this.vx;
-                this.y += this.vy;
-                this.rotation += this.vrot;
+                this.x += this.vx; this.y += this.vy; this.rotation += this.vrot;
+                this.vx *= 0.99; this.vy *= 0.99; // Air friction
 
-                // Friction
-                this.vx *= 0.98;
-                this.vy *= 0.98;
-
-                // Screen Bounce
+                // Bounce off walls
                 if (this.x < this.size || this.x > window.innerWidth - this.size) this.vx *= -1;
                 if (this.y < this.size || this.y > window.innerHeight - this.size) this.vy *= -1;
 
-                // Interaction with Hands (Repulsion & Grabbing)
+                // Hand Interaction
                 ['left', 'right'].forEach(side => {
                     const hand = STATE[side];
                     if (!hand.active) return;
 
-                    // Check Grabbing
+                    // Grab Check
                     if (hand.isPinched && !this.grabbedBy) {
                         const midX = (hand.nodes.index.x + hand.nodes.thumb.x) / 2;
                         const midY = (hand.nodes.index.y + hand.nodes.thumb.y) / 2;
-                        if (MathUtils.dist({x: midX, y: midY}, this) < this.size + 30) {
+                        if (MathUtils.dist({x: midX, y: midY}, this) < this.size + 20) {
                             this.grabbedBy = side;
-                            particles.emit(this.x, this.y, this.color, 20, true); // Shockwave on grab
+                            particles.emit(this.x, this.y, this.color, 15, true);
                         }
                     }
 
-                    // Check Repulsion from all nodes if not grabbed
+                    // Push away from palm
                     if (!this.grabbedBy) {
-                        TRACKED_NODES.forEach(nodeKey => {
-                            const node = hand.nodes[nodeKey];
-                            const d = MathUtils.dist(node, this);
-                            const repelRadius = 80;
-                            if (d < repelRadius && d > 0) {
-                                const force = (repelRadius - d) / repelRadius;
-                                const angle = Math.atan2(this.y - node.y, this.x - node.x);
-                                this.vx += Math.cos(angle) * force * 1.5;
-                                this.vy += Math.sin(angle) * force * 1.5;
-                                this.vrot += force * 0.02;
-                            }
-                        });
+                        const d = MathUtils.dist(hand.nodes.palm, this);
+                        if (d < 100) {
+                            const force = (100 - d) / 100;
+                            const angle = Math.atan2(this.y - hand.nodes.palm.y, this.x - hand.nodes.palm.x);
+                            this.vx += Math.cos(angle) * force * 1.5;
+                            this.vy += Math.sin(angle) * force * 1.5;
+                            this.vrot += force * 0.05;
+                        }
                     }
                 });
             }
 
             draw(ctx) {
-                ctx.save();
-                ctx.translate(this.x, this.y);
-                ctx.rotate(this.rotation);
+                ctx.save(); ctx.translate(this.x, this.y); ctx.rotate(this.rotation);
+                ctx.strokeStyle = this.color; ctx.lineWidth = 3;
+                ctx.shadowBlur = this.grabbedBy ? 20 : 10; ctx.shadowColor = this.color;
                 
-                ctx.strokeStyle = this.color;
-                ctx.lineWidth = 2;
-                ctx.shadowBlur = this.grabbedBy ? 30 : 15;
-                ctx.shadowColor = this.color;
                 ctx.beginPath();
-
-                // Holographic inner fill
-                ctx.fillStyle = this.color.replace(')', ', 0.1)').replace('rgb', 'rgba').replace('#', '');
-                // Note: handling hex to rgba simplified for pure visual
-                ctx.fillStyle = this.grabbedBy ? 'rgba(255,255,255,0.3)' : 'transparent';
-
                 if (this.type === 'box') {
                     ctx.rect(-this.size/2, -this.size/2, this.size, this.size);
                 } else if (this.type === 'circle') {
                     ctx.arc(0, 0, this.size/2, 0, Math.PI * 2);
-                    ctx.setLineDash([10, 5]);
-                } else if (this.type === 'triangle') {
-                    ctx.moveTo(0, -this.size/2);
-                    ctx.lineTo(this.size/2, this.size/2);
-                    ctx.lineTo(-this.size/2, this.size/2);
-                    ctx.closePath();
+                    if(CONFIG.currentTheme !== 'tadc') ctx.setLineDash([8, 4]); // Solid in TADC
+                } else { // Triangle
+                    ctx.moveTo(0, -this.size/2); ctx.lineTo(this.size/2, this.size/2); ctx.lineTo(-this.size/2, this.size/2); ctx.closePath();
                 }
-
                 ctx.stroke();
-                if(this.grabbedBy) ctx.fill();
-                
-                // Draw center node
-                ctx.beginPath();
-                ctx.arc(0, 0, 3, 0, Math.PI*2);
-                ctx.fillStyle = '#fff';
-                ctx.fill();
 
+                if(this.grabbedBy) {
+                    ctx.fillStyle = 'rgba(255,255,255,0.2)';
+                    ctx.fill();
+                }
                 ctx.restore();
             }
         }
@@ -488,20 +486,29 @@
             canvas: document.getElementById('holo-canvas'),
             ctx: document.getElementById('holo-canvas').getContext('2d'),
             
-            fps: document.getElementById('ui-fps'),
-            tracking: document.getElementById('ui-tracking'),
-            hands: document.getElementById('ui-hands'),
-            lState: document.getElementById('ui-l-state'),
-            rState: document.getElementById('ui-r-state'),
+            // HUD
+            intro: document.getElementById('intro-screen'),
             loading: document.getElementById('loading'),
-            loadingStatus: document.getElementById('loading-status'),
-            
-            panel: document.getElementById('settings-panel'),
-            btnToggle: document.getElementById('btn-toggle-settings'),
-            btnShow: document.getElementById('btn-show-settings'),
+            mainHud: document.getElementById('main-hud'),
+            settings: document.getElementById('settings-panel'),
             
             bindEvents() {
-                // Settings Controls
+                // Exhibition Start
+                document.getElementById('btn-start').addEventListener('click', () => {
+                    gsap.to(UI.intro, { opacity: 0, duration: 0.5, onComplete: () => {
+                        UI.intro.style.display = 'none';
+                        UI.loading.style.display = 'flex';
+                        initEngine(); // Start heavy lifting AFTER user clicks
+                    }});
+                });
+
+                // Spawners
+                document.getElementById('btn-spawn-box').addEventListener('click', () => shapes.push(new HoloShape('box')));
+                document.getElementById('btn-spawn-circle').addEventListener('click', () => shapes.push(new HoloShape('circle')));
+                document.getElementById('btn-spawn-tri').addEventListener('click', () => shapes.push(new HoloShape('triangle')));
+                document.getElementById('btn-clear-objects').addEventListener('click', () => shapes.length = 0);
+
+                // Settings
                 const bindSlider = (id, valId, key) => {
                     document.getElementById(id).addEventListener('input', e => {
                         CONFIG[key] = parseFloat(e.target.value);
@@ -511,128 +518,118 @@
                 bindSlider('sl-smooth', 'val-smooth', 'smoothing');
                 bindSlider('sl-pinch', 'val-pinch', 'pinchThreshold');
 
-                this.btnToggle.addEventListener('click', () => {
-                    gsap.to(this.panel, { scale: 0, opacity: 0, duration: 0.3, onComplete: () => {
-                        this.panel.classList.add('hidden');
-                        this.btnShow.classList.remove('hidden');
-                    }});
+                document.getElementById('btn-toggle-settings').addEventListener('click', () => {
+                    UI.settings.classList.add('hidden');
+                    document.getElementById('btn-show-settings').classList.remove('hidden');
                 });
-                
-                this.btnShow.addEventListener('click', () => {
-                    this.panel.classList.remove('hidden');
-                    this.btnShow.classList.add('hidden');
-                    gsap.to(this.panel, { scale: 1, opacity: 1, duration: 0.3, ease: "back.out(1.7)" });
+                document.getElementById('btn-show-settings').addEventListener('click', (e) => {
+                    UI.settings.classList.remove('hidden');
+                    e.target.classList.add('hidden');
                 });
 
-                // Themes
                 document.getElementById('sel-theme').addEventListener('change', e => {
-                    this.video.classList.remove(`theme-${CONFIG.currentTheme}`);
+                    UI.video.className = ''; // reset
                     CONFIG.currentTheme = e.target.value;
-                    if (CONFIG.currentTheme !== 'holo') this.video.classList.add(`theme-${CONFIG.currentTheme}`);
+                    if(CONFIG.currentTheme !== 'holo') UI.video.classList.add(`theme-${CONFIG.currentTheme}`);
                 });
-                document.getElementById('cb-animate-theme').addEventListener('change', e => {
-                    CONFIG.animateTheme = e.target.checked;
-                    CONFIG.animateTheme ? this.video.classList.add('animate-colors') : this.video.classList.remove('animate-colors');
-                });
-
-                // Shape Spawners
-                document.getElementById('btn-spawn-box').addEventListener('click', () => shapes.push(new HoloShape('box')));
-                document.getElementById('btn-spawn-circle').addEventListener('click', () => shapes.push(new HoloShape('circle')));
-                document.getElementById('btn-spawn-tri').addEventListener('click', () => shapes.push(new HoloShape('triangle')));
-                document.getElementById('btn-clear-objects').addEventListener('click', () => shapes.length = 0);
             },
-            
-            resize() {
-                this.canvas.width = window.innerWidth;
-                this.canvas.height = window.innerHeight;
-            }
+            resize() { this.canvas.width = window.innerWidth; this.canvas.height = window.innerHeight; }
         };
-
         window.addEventListener('resize', () => UI.resize());
-        UI.resize();
-        UI.bindEvents();
+        UI.resize(); UI.bindEvents();
 
         let handLandmarker = null;
         let lastVideoTime = -1;
 
         async function initEngine() {
             try {
-                UI.loadingStatus.innerText = "Initializing Webcam...";
-                const stream = await navigator.mediaDevices.getUserMedia({ video: { width: 1280, height: 720, facingMode: "user" } });
-                UI.video.srcObject = stream;
+                const status = document.getElementById('loading-status');
+                status.innerText = "Activating Camera...";
                 
-                await new Promise(resolve => { UI.video.onloadeddata = () => { UI.video.play(); resolve(); }; });
+                // Optimization: Request lower resolution for faster AI processing. 
+                // Visuals will still be upscaled by CSS object-fit.
+                const stream = await navigator.mediaDevices.getUserMedia({ 
+                    video: { width: 640, height: 480, facingMode: "user" } 
+                });
+                UI.video.srcObject = stream;
+                UI.video.play();
 
-                UI.loadingStatus.innerText = "Booting MediaPipe Tasks Vision...";
+                status.innerText = "Loading Hand Tracking Models...";
                 const vision = await FilesetResolver.forVisionTasks("https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.3/wasm");
                 
                 handLandmarker = await HandLandmarker.createFromOptions(vision, {
                     baseOptions: {
                         modelAssetPath: `https://storage.googleapis.com/mediapipe-models/hand_landmarker/hand_landmarker/float16/1/hand_landmarker.task`,
-                        delegate: "GPU"
+                        delegate: "GPU" // Critical for performance
                     },
                     runningMode: "VIDEO",
                     numHands: 2,
-                    minHandDetectionConfidence: 0.6,
-                    minHandPresenceConfidence: 0.6,
-                    minTrackingConfidence: 0.6
+                    minHandDetectionConfidence: 0.5, // Lowered slightly for faster lock-on
+                    minHandPresenceConfidence: 0.5,
+                    minTrackingConfidence: 0.5
                 });
 
-                gsap.to(UI.loading, { opacity: 0, duration: 1, onComplete: () => UI.loading.remove() });
-                UI.tracking.innerText = "ONLINE";
-                UI.tracking.className = "hud-text text-cyan-400";
-                
-                requestAnimationFrame(renderLoop);
+                // Boot complete
+                gsap.to(UI.loading, { opacity: 0, duration: 0.5, onComplete: () => {
+                    UI.loading.style.display = 'none';
+                    UI.mainHud.classList.remove('hidden');
+                    UI.settings.classList.remove('hidden');
+                    document.getElementById('ui-tracking').innerText = "ONLINE";
+                    document.getElementById('ui-tracking').className = "hud-text text-cyan-400";
+                    
+                    // Spawn intro shapes
+                    shapes.push(new HoloShape('box'), new HoloShape('circle'));
+                    
+                    requestAnimationFrame(renderLoop);
+                }});
 
             } catch (err) {
                 console.error(err);
-                UI.loadingStatus.innerText = "Error: " + err.message;
-                UI.loadingStatus.classList.add("text-red-500");
+                document.getElementById('loading-status').innerText = "ERROR: " + err.message;
+                document.getElementById('loading-status').classList.add("text-red-500");
             }
         }
 
         function processLandmarks(results) {
-            STATE.handCount = results.handednesses.length;
             const now = Date.now();
+            STATE.handCount = results.handednesses.length;
             
-            // Timeout logic
+            // Auto timeout if hand leaves frame
             if(now - STATE.left.lastActive > 100) STATE.left.active = false;
             if(now - STATE.right.lastActive > 100) STATE.right.active = false;
 
             if (results.landmarks) {
                 results.landmarks.forEach((landmarks, index) => {
+                    // Fix mirrored labeling
                     const classification = results.handednesses[index][0];
                     const handType = classification.categoryName === 'Left' ? 'right' : 'left'; 
-                    const handState = STATE[handType];
-                    const target = targets[handType];
+                    const s = STATE[handType];
+                    const t = targets[handType];
                     
-                    handState.active = true;
-                    handState.lastActive = now;
+                    s.active = true; s.lastActive = now;
                     
-                    // Map all 6 target nodes
-                    TRACKED_NODES.forEach(nodeKey => {
-                        const lm = landmarks[MP_LANDMARKS[nodeKey]];
-                        // Mirror X
-                        target.nodes[nodeKey] = { x: (1 - lm.x) * UI.canvas.width, y: lm.y * UI.canvas.height, z: lm.z };
+                    // Map 6 nodes
+                    TRACKED_NODES.forEach(key => {
+                        const lm = landmarks[MP_LANDMARKS[key]];
+                        t.nodes[key] = { x: (1 - lm.x) * UI.canvas.width, y: lm.y * UI.canvas.height, z: lm.z };
                     });
                     
-                    // Pinch detection (Index to Thumb)
-                    const rawPinchDist = MathUtils.dist3D(landmarks[MP_LANDMARKS.index], landmarks[MP_LANDMARKS.thumb]);
-                    handState.pinchDist = rawPinchDist;
-                    
-                    const wasPinched = handState.isPinched;
-                    handState.isPinched = rawPinchDist < CONFIG.pinchThreshold;
+                    // Pinch Logic
+                    const rawDist = MathUtils.dist3D(landmarks[MP_LANDMARKS.index], landmarks[MP_LANDMARKS.thumb]);
+                    s.pinchDist = rawDist;
+                    const wasPinched = s.isPinched;
+                    s.isPinched = rawDist < CONFIG.pinchThreshold;
 
-                    // Shockwave emit on pinch start
-                    if(!wasPinched && handState.isPinched) {
-                        const midX = (handState.nodes.index.x + handState.nodes.thumb.x) / 2;
-                        const midY = (handState.nodes.index.y + handState.nodes.thumb.y) / 2;
-                        particles.emit(midX, midY, handType === 'left' ? 'rgb(0, 243, 255)' : 'rgb(255, 0, 234)', 20, true);
+                    if(!wasPinched && s.isPinched) {
+                        const midX = (s.nodes.index.x + s.nodes.thumb.x) / 2;
+                        const midY = (s.nodes.index.y + s.nodes.thumb.y) / 2;
+                        const color = handType === 'left' ? 'rgb(0, 243, 255)' : 'rgb(255, 0, 234)';
+                        particles.emit(midX, midY, color, 12, true);
                     }
                 });
             }
 
-            // Smooth interpolation for all nodes
+            // Interpolation for smooth UI
             ['left', 'right'].forEach(side => {
                 const s = STATE[side];
                 const t = targets[side];
@@ -641,151 +638,94 @@
                         s.nodes[key].x = MathUtils.lerp(s.nodes[key].x, t.nodes[key].x, CONFIG.smoothing);
                         s.nodes[key].y = MathUtils.lerp(s.nodes[key].y, t.nodes[key].y, CONFIG.smoothing);
                     });
-                    
-                    // Random trail emit from fingertips
-                    if(Math.random() > 0.7) {
-                        const fingers = ['index', 'middle', 'ring', 'pinky'];
-                        const rndFinger = fingers[Math.floor(Math.random()*fingers.length)];
-                        particles.emit(s.nodes[rndFinger].x, s.nodes[rndFinger].y, side === 'left' ? 'rgb(0, 243, 255)' : 'rgb(255, 0, 234)', 1);
-                    }
                 }
             });
         }
 
-        function drawElectricBeam(ctx, p1, p2, color, opacityMult = 1.0) {
-            const dist = MathUtils.dist(p1, p2);
-            if(dist > CONFIG.beamDistance) return;
-
-            const opacity = (1 - (dist / CONFIG.beamDistance)) * opacityMult;
-            ctx.save();
-            ctx.strokeStyle = color.replace('rgb', 'rgba').replace(')', `, ${opacity})`);
-            ctx.shadowBlur = CONFIG.glowIntensity;
-            ctx.shadowColor = color;
-            
-            // Core beam
-            ctx.lineWidth = 1.5;
-            ctx.beginPath(); ctx.moveTo(p1.x, p1.y); ctx.lineTo(p2.x, p2.y); ctx.stroke();
-
-            // Electricity noise
-            ctx.lineWidth = 0.5;
-            ctx.beginPath(); ctx.moveTo(p1.x, p1.y);
-            const steps = Math.max(3, Math.floor(dist / 30));
-            for(let i=1; i<steps; i++) {
-                const t = i / steps;
-                const midX = MathUtils.lerp(p1.x, p2.x, t) + MathUtils.random(-8, 8);
-                const midY = MathUtils.lerp(p1.y, p2.y, t) + MathUtils.random(-8, 8);
-                ctx.lineTo(midX, midY);
-            }
-            ctx.lineTo(p2.x, p2.y); ctx.stroke();
-            ctx.restore();
-        }
-
-        function drawHoloRing(ctx, x, y, radius, color, rotation, dashed = false) {
-            ctx.save(); ctx.translate(x, y); ctx.rotate(rotation);
-            ctx.beginPath();
-            if(dashed) ctx.setLineDash([4, 6]);
-            ctx.arc(0, 0, radius, 0, Math.PI * 2);
-            ctx.strokeStyle = color; ctx.lineWidth = 2;
+        function drawBeam(ctx, p1, p2, color, thickness) {
+            ctx.beginPath(); ctx.moveTo(p1.x, p1.y); ctx.lineTo(p2.x, p2.y);
+            ctx.strokeStyle = color; ctx.lineWidth = thickness;
             ctx.shadowBlur = CONFIG.glowIntensity; ctx.shadowColor = color;
-            ctx.stroke(); ctx.restore();
+            ctx.stroke();
         }
 
-        function renderHands() {
-            const ctx = UI.ctx;
-            const time = performance.now() * 0.001;
-
+        function renderHands(ctx) {
             ['left', 'right'].forEach(side => {
                 const s = STATE[side];
                 if (!s.active) return;
 
-                const color = side === 'left' ? 'rgb(0, 243, 255)' : 'rgb(255, 0, 234)';
-                const dimColor = side === 'left' ? 'rgba(0, 243, 255, 0.4)' : 'rgba(255, 0, 234, 0.4)';
+                const isTADC = CONFIG.currentTheme === 'tadc';
                 
-                // Draw 5 Fingers & Connections to Palm
+                // TADC Colors are harsh, Holo colors are neon
+                let color, dimColor;
+                if(isTADC) {
+                    color = side === 'left' ? 'rgb(255, 255, 0)' : 'rgb(255, 0, 0)'; // Yellow / Red
+                    dimColor = side === 'left' ? 'rgba(255, 255, 0, 0.5)' : 'rgba(255, 0, 0, 0.5)';
+                } else {
+                    color = side === 'left' ? 'rgb(0, 243, 255)' : 'rgb(255, 0, 234)'; // Cyan / Magenta
+                    dimColor = side === 'left' ? 'rgba(0, 243, 255, 0.4)' : 'rgba(255, 0, 234, 0.4)';
+                }
+                
+                // Draw Wireframe bones from palm to fingers
                 ['thumb', 'index', 'middle', 'ring', 'pinky'].forEach(finger => {
                     const node = s.nodes[finger];
+                    drawBeam(ctx, s.nodes.palm, node, dimColor, 1.5);
                     
-                    // Connect palm to finger
-                    drawElectricBeam(ctx, s.nodes.palm, node, color, 0.4);
-                    
-                    // Draw fingertip node
-                    drawHoloRing(ctx, node.x, node.y, finger === 'index' || finger === 'thumb' ? 12 : 8, dimColor, time);
-                    ctx.beginPath(); ctx.arc(node.x, node.y, 2, 0, Math.PI*2);
-                    ctx.fillStyle = '#fff'; ctx.fill();
+                    // Node dot
+                    ctx.beginPath(); ctx.arc(node.x, node.y, finger==='index'||finger==='thumb'? 4 : 2, 0, Math.PI*2);
+                    ctx.fillStyle = '#fff'; ctx.shadowBlur = 5; ctx.shadowColor = color; ctx.fill();
                 });
 
-                // Highlight Pinch (Index & Thumb)
-                drawElectricBeam(ctx, s.nodes.index, s.nodes.thumb, color, 1.0);
+                // Pinch Connect Line
+                drawBeam(ctx, s.nodes.index, s.nodes.thumb, color, s.isPinched ? 3 : 1);
                 
-                // Palm core node
-                drawHoloRing(ctx, s.nodes.palm.x, s.nodes.palm.y, 20, dimColor, -time, true);
-                
-                // Energy on Pinch
-                if (s.isPinched) {
-                    const midX = (s.nodes.index.x + s.nodes.thumb.x) / 2;
-                    const midY = (s.nodes.index.y + s.nodes.thumb.y) / 2;
-                    const grad = ctx.createRadialGradient(midX, midY, 0, midX, midY, 20);
-                    grad.addColorStop(0, '#fff'); grad.addColorStop(0.3, color); grad.addColorStop(1, 'transparent');
-                    ctx.beginPath(); ctx.arc(midX, midY, 20, 0, Math.PI * 2);
-                    ctx.fillStyle = grad; ctx.fill();
+                // Palm Core
+                ctx.beginPath(); ctx.arc(s.nodes.palm.x, s.nodes.palm.y, 8, 0, Math.PI*2);
+                ctx.strokeStyle = color; ctx.lineWidth = 2; ctx.stroke();
+
+                // UI Update
+                const uiEl = side === 'left' ? document.getElementById('ui-l-state') : document.getElementById('ui-r-state');
+                if(s.isPinched) {
+                    uiEl.innerText = "GRABBING"; uiEl.className = "text-xs font-bold text-pink-500";
+                } else {
+                    uiEl.innerText = "TRACKING"; uiEl.className = "text-xs font-bold text-cyan-300";
                 }
             });
+
+            // Hand missing UI
+            if(!STATE.left.active) document.getElementById('ui-l-state').innerHTML = `<span class="text-gray-600">LOST</span>`;
+            if(!STATE.right.active) document.getElementById('ui-r-state').innerHTML = `<span class="text-gray-600">LOST</span>`;
         }
 
-        let frameCount = 0;
-        let lastFpsTime = Date.now();
+        let frameCount = 0; let lastTime = performance.now();
 
         function renderLoop() {
-            // FPS
+            // FPS Counter (optimized check)
             frameCount++;
-            const now = Date.now();
-            if (now - lastFpsTime >= 1000) {
-                UI.fps.innerText = frameCount.toFixed(1);
-                frameCount = 0;
-                lastFpsTime = now;
+            const now = performance.now();
+            if (now - lastTime >= 1000) {
+                document.getElementById('ui-fps').innerText = frameCount;
+                frameCount = 0; lastTime = now;
             }
 
-            // AI Inference
-            if (UI.video.currentTime !== lastVideoTime) {
+            // AI Inference Trigger
+            if (UI.video.currentTime !== lastVideoTime && handLandmarker) {
                 lastVideoTime = UI.video.currentTime;
-                if (handLandmarker) {
-                    const results = handLandmarker.detectForVideo(UI.video, performance.now());
-                    processLandmarks(results);
-                }
+                const results = handLandmarker.detectForVideo(UI.video, now);
+                processLandmarks(results);
             }
 
-            // Clear & Setup Canvas
+            // Render
             UI.ctx.clearRect(0, 0, UI.canvas.width, UI.canvas.height);
-            UI.ctx.globalCompositeOperation = 'lighter';
+            UI.ctx.globalCompositeOperation = CONFIG.currentTheme === 'tadc' ? 'source-over' : 'lighter';
 
-            // Update & Draw Objects
-            shapes.forEach(shape => {
-                shape.update();
-                shape.draw(UI.ctx);
-            });
-
-            // Draw Hands & Particles
-            renderHands();
+            shapes.forEach(shape => { shape.update(); shape.draw(UI.ctx); });
+            renderHands(UI.ctx);
             particles.updateAndDraw(UI.ctx);
-
-            // Update UI State
-            UI.hands.innerText = STATE.handCount;
-            ['left', 'right'].forEach(side => {
-                const el = side === 'left' ? UI.lState : UI.rState;
-                const s = STATE[side];
-                if(s.active) {
-                    el.innerHTML = s.isPinched 
-                        ? `<span class="text-pink-500 font-bold tracking-widest">GRAB (${s.pinchDist.toFixed(2)})</span>` 
-                        : `<span class="text-cyan-300 tracking-widest">ACTIVE</span>`;
-                } else {
-                    el.innerHTML = `<span class="text-gray-600">OFFLINE</span>`;
-                }
-            });
 
             requestAnimationFrame(renderLoop);
         }
 
-        initEngine();
     </script>
 </body>
 </html>
