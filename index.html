@@ -1,0 +1,648 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HoloGesture Engine - Holographic Interface</title>
+    <!-- Tailwind CSS for UI Layout -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- GSAP for UI Animations -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap');
+
+        :root {
+            --neon-blue: #00f3ff;
+            --neon-magenta: #ff00ea;
+            --dark-bg: #05050a;
+            --grid-color: rgba(0, 243, 255, 0.1);
+        }
+
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            background-color: var(--dark-bg);
+            color: var(--neon-blue);
+            font-family: 'Share Tech Mono', monospace;
+            overflow: hidden;
+            user-select: none;
+        }
+
+        /* Animated Grid Background */
+        .hologrid {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 200vw;
+            height: 200vh;
+            background-image: 
+                linear-gradient(var(--grid-color) 1px, transparent 1px),
+                linear-gradient(90deg, var(--grid-color) 1px, transparent 1px);
+            background-size: 50px 50px;
+            transform: perspective(500px) rotateX(60deg) translateY(-100px) translateZ(-200px);
+            animation: gridMove 20s linear infinite;
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        @keyframes gridMove {
+            0% { transform: perspective(500px) rotateX(60deg) translateY(0) translateZ(-200px); }
+            100% { transform: perspective(500px) rotateX(60deg) translateY(50px) translateZ(-200px); }
+        }
+
+        /* Main Render Canvas */
+        #holo-canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 10;
+            pointer-events: none;
+        }
+
+        /* Hidden Webcam Video */
+        #webcam {
+            display: none;
+        }
+
+        /* HUD Styling */
+        .hud-panel {
+            background: rgba(5, 5, 10, 0.6);
+            border: 1px solid var(--neon-blue);
+            box-shadow: 0 0 10px rgba(0, 243, 255, 0.2), inset 0 0 20px rgba(0, 243, 255, 0.1);
+            backdrop-filter: blur(4px);
+            z-index: 20;
+        }
+
+        .hud-text {
+            text-shadow: 0 0 5px var(--neon-blue);
+        }
+        
+        .hud-text-alert {
+            color: var(--neon-magenta);
+            text-shadow: 0 0 5px var(--neon-magenta);
+        }
+
+        /* Custom Range Slider */
+        input[type=range] {
+            -webkit-appearance: none;
+            width: 100%;
+            background: transparent;
+        }
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            height: 16px;
+            width: 16px;
+            border-radius: 50%;
+            background: var(--neon-blue);
+            box-shadow: 0 0 10px var(--neon-blue);
+            cursor: pointer;
+            margin-top: -6px;
+        }
+        input[type=range]::-webkit-slider-runnable-track {
+            width: 100%;
+            height: 4px;
+            cursor: pointer;
+            background: rgba(0, 243, 255, 0.3);
+            border-radius: 2px;
+        }
+
+        /* Loading Screen */
+        #loading {
+            position: absolute;
+            inset: 0;
+            background: var(--dark-bg);
+            z-index: 50;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .loader-ring {
+            width: 100px;
+            height: 100px;
+            border: 4px solid transparent;
+            border-top-color: var(--neon-blue);
+            border-bottom-color: var(--neon-magenta);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin { 100% { transform: rotate(360deg); } }
+    </style>
+</head>
+<body>
+
+    <div class="hologrid"></div>
+    <video id="webcam" autoplay playsinline></video>
+    <canvas id="holo-canvas"></canvas>
+
+    <!-- Loading Screen -->
+    <div id="loading">
+        <div class="loader-ring mb-4"></div>
+        <h1 class="text-2xl tracking-widest hud-text">INITIALIZING HOLOGESTURE ENGINE</h1>
+        <p class="text-sm mt-2 text-cyan-400 opacity-70" id="loading-status">Loading MediaPipe Models...</p>
+    </div>
+
+    <!-- Top Left HUD -->
+    <div class="absolute top-4 left-4 p-4 w-72 hud-panel rounded-lg flex flex-col gap-2">
+        <h2 class="text-xl font-bold border-b border-cyan-500 pb-2 mb-2 tracking-wider">SYSTEM STATUS</h2>
+        
+        <div class="flex justify-between text-sm">
+            <span>FPS:</span>
+            <span id="ui-fps" class="hud-text">00.0</span>
+        </div>
+        <div class="flex justify-between text-sm">
+            <span>TRACKING:</span>
+            <span id="ui-tracking" class="hud-text-alert">OFFLINE</span>
+        </div>
+        <div class="flex justify-between text-sm">
+            <span>HANDS DETECTED:</span>
+            <span id="ui-hands" class="hud-text">0</span>
+        </div>
+        
+        <div class="mt-2 border-t border-cyan-800 pt-2">
+            <h3 class="text-xs text-cyan-500 mb-1">LEFT HAND</h3>
+            <div class="flex justify-between text-sm">
+                <span>STATE:</span>
+                <span id="ui-l-state" class="hud-text">IDLE</span>
+            </div>
+            <div class="flex justify-between text-sm">
+                <span>PINCH DIST:</span>
+                <span id="ui-l-pinch" class="hud-text">0.00</span>
+            </div>
+        </div>
+
+        <div class="mt-2 border-t border-cyan-800 pt-2">
+            <h3 class="text-xs text-cyan-500 mb-1">RIGHT HAND</h3>
+            <div class="flex justify-between text-sm">
+                <span>STATE:</span>
+                <span id="ui-r-state" class="hud-text">IDLE</span>
+            </div>
+            <div class="flex justify-between text-sm">
+                <span>PINCH DIST:</span>
+                <span id="ui-r-pinch" class="hud-text">0.00</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bottom Right Settings Panel -->
+    <div class="absolute bottom-4 right-4 p-4 w-80 hud-panel rounded-lg flex flex-col gap-3 transition-transform origin-bottom-right" id="settings-panel">
+        <div class="flex justify-between items-center border-b border-cyan-500 pb-2">
+            <h2 class="text-lg font-bold tracking-wider">CALIBRATION</h2>
+            <button id="btn-toggle-settings" class="text-xs border border-cyan-500 px-2 py-1 rounded hover:bg-cyan-900 transition-colors">HIDE</button>
+        </div>
+
+        <div class="flex flex-col gap-1">
+            <label class="text-xs flex justify-between"><span>Motion Smoothing</span> <span id="val-smooth">0.15</span></label>
+            <input type="range" id="sl-smooth" min="0.01" max="0.5" step="0.01" value="0.15">
+        </div>
+        
+        <div class="flex flex-col gap-1">
+            <label class="text-xs flex justify-between"><span>Pinch Threshold</span> <span id="val-pinch">0.06</span></label>
+            <input type="range" id="sl-pinch" min="0.02" max="0.15" step="0.01" value="0.06">
+        </div>
+
+        <div class="flex flex-col gap-1">
+            <label class="text-xs flex justify-between"><span>Glow Intensity</span> <span id="val-glow">20</span></label>
+            <input type="range" id="sl-glow" min="0" max="50" step="1" value="20">
+        </div>
+
+        <div class="flex flex-col gap-1">
+            <label class="text-xs flex justify-between"><span>Particle Count</span> <span id="val-particles">100</span></label>
+            <input type="range" id="sl-particles" min="0" max="300" step="10" value="100">
+        </div>
+    </div>
+
+    <!-- Hidden Toggle Button for Settings (when hidden) -->
+    <button id="btn-show-settings" class="absolute bottom-4 right-4 hud-panel px-4 py-2 rounded-lg font-bold text-sm hidden hover:bg-cyan-900 transition-colors z-30">
+        CALIBRATE
+    </button>
+
+    <script type="module">
+        import { FilesetResolver, HandLandmarker } from "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.3/vision_bundle.mjs";
+
+        // --- CONFIGURATION & STATE ---
+        const CONFIG = {
+            smoothing: 0.15,
+            pinchThreshold: 0.06,
+            glowIntensity: 20,
+            maxParticles: 100,
+            magneticDistance: 150, // Pixels
+            beamDistance: 400     // Pixels
+        };
+
+        const STATE = {
+            left: { active: false, index: {x:0, y:0}, thumb: {x:0, y:0}, pinchDist: 0, isPinched: false, lastActive: 0 },
+            right: { active: false, index: {x:0, y:0}, thumb: {x:0, y:0}, pinchDist: 0, isPinched: false, lastActive: 0 },
+            fps: 0,
+            handCount: 0
+        };
+
+        // --- MATH & UTILS ---
+        const MathUtils = {
+            lerp: (start, end, amt) => (1 - amt) * start + amt * end,
+            dist: (p1, p2) => Math.sqrt(Math.pow(p2.x - p1.x, 2) + Math.pow(p2.y - p1.y, 2)),
+            dist3D: (p1, p2) => Math.sqrt(Math.pow(p2.x - p1.x, 2) + Math.pow(p2.y - p1.y, 2) + Math.pow(p2.z - p1.z, 2)),
+            random: (min, max) => Math.random() * (max - min) + min
+        };
+
+        // --- PARTICLE ENGINE ---
+        class ParticleSystem {
+            constructor() {
+                this.particles = [];
+            }
+            
+            emit(x, y, color, count = 1, isShockwave = false) {
+                if(this.particles.length >= CONFIG.maxParticles && !isShockwave) return;
+                
+                for(let i=0; i<count; i++) {
+                    const angle = MathUtils.random(0, Math.PI * 2);
+                    const speed = isShockwave ? MathUtils.random(5, 15) : MathUtils.random(0.5, 2);
+                    this.particles.push({
+                        x, y,
+                        vx: Math.cos(angle) * speed,
+                        vy: Math.sin(angle) * speed,
+                        life: 1.0,
+                        decay: isShockwave ? MathUtils.random(0.02, 0.05) : MathUtils.random(0.01, 0.03),
+                        color,
+                        size: MathUtils.random(1, 3)
+                    });
+                }
+            }
+
+            updateAndDraw(ctx) {
+                for (let i = this.particles.length - 1; i >= 0; i--) {
+                    const p = this.particles[i];
+                    p.x += p.vx;
+                    p.y += p.vy;
+                    p.life -= p.decay;
+
+                    if (p.life <= 0) {
+                        this.particles.splice(i, 1);
+                        continue;
+                    }
+
+                    ctx.beginPath();
+                    ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+                    ctx.fillStyle = p.color.replace(')', `, ${p.life})`).replace('rgb', 'rgba');
+                    ctx.shadowBlur = CONFIG.glowIntensity / 2;
+                    ctx.shadowColor = p.color;
+                    ctx.fill();
+                }
+            }
+        }
+
+        const particles = new ParticleSystem();
+
+        const UI = {
+            video: document.getElementById('webcam'),
+            canvas: document.getElementById('holo-canvas'),
+            ctx: document.getElementById('holo-canvas').getContext('2d'),
+            
+            // HUD
+            fps: document.getElementById('ui-fps'),
+            tracking: document.getElementById('ui-tracking'),
+            hands: document.getElementById('ui-hands'),
+            lState: document.getElementById('ui-l-state'),
+            lPinch: document.getElementById('ui-l-pinch'),
+            rState: document.getElementById('ui-r-state'),
+            rPinch: document.getElementById('ui-r-pinch'),
+            loading: document.getElementById('loading'),
+            loadingStatus: document.getElementById('loading-status'),
+            
+            // Settings
+            panel: document.getElementById('settings-panel'),
+            btnToggle: document.getElementById('btn-toggle-settings'),
+            btnShow: document.getElementById('btn-show-settings'),
+            
+            bindSettings() {
+                const bindSlider = (id, valId, configKey) => {
+                    const slider = document.getElementById(id);
+                    const val = document.getElementById(valId);
+                    slider.addEventListener('input', (e) => {
+                        CONFIG[configKey] = parseFloat(e.target.value);
+                        val.innerText = e.target.value;
+                    });
+                };
+                bindSlider('sl-smooth', 'val-smooth', 'smoothing');
+                bindSlider('sl-pinch', 'val-pinch', 'pinchThreshold');
+                bindSlider('sl-glow', 'val-glow', 'glowIntensity');
+                bindSlider('sl-particles', 'val-particles', 'maxParticles');
+
+                this.btnToggle.addEventListener('click', () => {
+                    gsap.to(this.panel, { scale: 0, opacity: 0, duration: 0.3, onComplete: () => {
+                        this.panel.classList.add('hidden');
+                        this.btnShow.classList.remove('hidden');
+                    }});
+                });
+                
+                this.btnShow.addEventListener('click', () => {
+                    this.panel.classList.remove('hidden');
+                    this.btnShow.classList.add('hidden');
+                    gsap.to(this.panel, { scale: 1, opacity: 1, duration: 0.3, ease: "back.out(1.7)" });
+                });
+            },
+            
+            resize() {
+                this.canvas.width = window.innerWidth;
+                this.canvas.height = window.innerHeight;
+            }
+        };
+
+        window.addEventListener('resize', () => UI.resize());
+        UI.resize();
+        UI.bindSettings();
+
+        let handLandmarker = null;
+        let runningMode = "VIDEO";
+        let lastVideoTime = -1;
+
+        async function initEngine() {
+            try {
+                UI.loadingStatus.innerText = "Initializing Webcam...";
+                const stream = await navigator.mediaDevices.getUserMedia({ 
+                    video: { width: 1280, height: 720, facingMode: "user" } 
+                });
+                UI.video.srcObject = stream;
+                
+                await new Promise((resolve) => {
+                    UI.video.onloadeddata = () => {
+                        UI.video.play();
+                        resolve();
+                    };
+                });
+
+                UI.loadingStatus.innerText = "Loading AI Vision Models...";
+                const vision = await FilesetResolver.forVisionTasks(
+                    "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.3/wasm"
+                );
+                
+                handLandmarker = await HandLandmarker.createFromOptions(vision, {
+                    baseOptions: {
+                        modelAssetPath: `https://storage.googleapis.com/mediapipe-models/hand_landmarker/hand_landmarker/float16/1/hand_landmarker.task`,
+                        delegate: "GPU"
+                    },
+                    runningMode: runningMode,
+                    numHands: 2,
+                    minHandDetectionConfidence: 0.6,
+                    minHandPresenceConfidence: 0.6,
+                    minTrackingConfidence: 0.6
+                });
+
+                // Hide loading screen
+                gsap.to(UI.loading, { opacity: 0, duration: 1, onComplete: () => UI.loading.remove() });
+                UI.tracking.innerText = "ONLINE";
+                UI.tracking.className = "hud-text text-cyan-400";
+                
+                // Start Render Loop
+                requestAnimationFrame(renderLoop);
+
+            } catch (err) {
+                console.error(err);
+                UI.loadingStatus.innerText = "Error: " + err.message;
+                UI.loadingStatus.classList.add("text-red-500");
+            }
+        }
+
+        // Smooth coordinates specifically for the 4 core points
+        const targets = {
+            left: { index: {x:0, y:0}, thumb: {x:0, y:0} },
+            right: { index: {x:0, y:0}, thumb: {x:0, y:0} }
+        };
+
+        function processLandmarks(results) {
+            STATE.handCount = results.handednesses.length;
+            const now = Date.now();
+            
+            // Reset active states if not updated
+            if(now - STATE.left.lastActive > 100) STATE.left.active = false;
+            if(now - STATE.right.lastActive > 100) STATE.right.active = false;
+
+            if (results.landmarks) {
+                results.landmarks.forEach((landmarks, index) => {
+                    // MediaPipe handedness is flipped when using frontal camera
+                    const classification = results.handednesses[index][0];
+                    const handType = classification.categoryName === 'Left' ? 'right' : 'left'; 
+                    const handState = STATE[handType];
+                    const target = targets[handType];
+                    
+                    handState.active = true;
+                    handState.lastActive = now;
+                    
+                    // Core 4 Points mapping (Mirroring X for webcam view)
+                    // Index: 8, Thumb: 4
+                    const i = landmarks[8];
+                    const t = landmarks[4];
+                    
+                    target.index = { x: (1 - i.x) * UI.canvas.width, y: i.y * UI.canvas.height };
+                    target.thumb = { x: (1 - t.x) * UI.canvas.width, y: t.y * UI.canvas.height };
+                    
+                    // 3D Distance for Pinch Detection (Normalized)
+                    const rawPinchDist = MathUtils.dist3D(i, t);
+                    handState.pinchDist = rawPinchDist;
+                    
+                    const wasPinched = handState.isPinched;
+                    handState.isPinched = rawPinchDist < CONFIG.pinchThreshold;
+
+                    // Shockwave on pinch start
+                    if(!wasPinched && handState.isPinched) {
+                        const midX = (handState.index.x + handState.thumb.x) / 2;
+                        const midY = (handState.index.y + handState.thumb.y) / 2;
+                        particles.emit(midX, midY, handType === 'left' ? 'rgb(0, 243, 255)' : 'rgb(255, 0, 234)', 15, true);
+                    }
+                });
+            }
+
+            // Spring/Lerp physics for smooth movement
+            ['left', 'right'].forEach(side => {
+                const s = STATE[side];
+                const t = targets[side];
+                if(s.active) {
+                    // Elastic/Spring smoothing
+                    s.index.x = MathUtils.lerp(s.index.x, t.index.x, CONFIG.smoothing);
+                    s.index.y = MathUtils.lerp(s.index.y, t.index.y, CONFIG.smoothing);
+                    s.thumb.x = MathUtils.lerp(s.thumb.x, t.thumb.x, CONFIG.smoothing);
+                    s.thumb.y = MathUtils.lerp(s.thumb.y, t.thumb.y, CONFIG.smoothing);
+                    
+                    // Emitting hover trails
+                    if(Math.random() > 0.6) {
+                        particles.emit(s.index.x, s.index.y, side === 'left' ? 'rgb(0, 243, 255)' : 'rgb(255, 0, 234)', 1);
+                    }
+                }
+            });
+        }
+
+        let frameCount = 0;
+        let lastFpsTime = Date.now();
+
+        function drawHoloRing(ctx, x, y, radius, color, rotation, dashed = false) {
+            ctx.save();
+            ctx.translate(x, y);
+            ctx.rotate(rotation);
+            ctx.beginPath();
+            if(dashed) ctx.setLineDash([5, 10]);
+            ctx.arc(0, 0, radius, 0, Math.PI * 2);
+            ctx.strokeStyle = color;
+            ctx.lineWidth = 2;
+            ctx.shadowBlur = CONFIG.glowIntensity;
+            ctx.shadowColor = color;
+            ctx.stroke();
+            ctx.restore();
+        }
+
+        function drawEnergyBall(ctx, x, y, size, color) {
+            const grad = ctx.createRadialGradient(x, y, 0, x, y, size);
+            grad.addColorStop(0, '#fff');
+            grad.addColorStop(0.2, color);
+            grad.addColorStop(1, 'transparent');
+            
+            ctx.beginPath();
+            ctx.arc(x, y, size, 0, Math.PI * 2);
+            ctx.fillStyle = grad;
+            ctx.fill();
+        }
+
+        function drawElectricBeam(ctx, p1, p2, color) {
+            const dist = MathUtils.dist(p1, p2);
+            if(dist > CONFIG.beamDistance) return;
+
+            const opacity = 1 - (dist / CONFIG.beamDistance);
+            ctx.save();
+            ctx.strokeStyle = color.replace('rgb', 'rgba').replace(')', `, ${opacity})`);
+            ctx.shadowBlur = CONFIG.glowIntensity;
+            ctx.shadowColor = color;
+            
+            // Draw core beam
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(p1.x, p1.y);
+            ctx.lineTo(p2.x, p2.y);
+            ctx.stroke();
+
+            // Draw noise/electricity
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.moveTo(p1.x, p1.y);
+            
+            const steps = 5;
+            for(let i=1; i<steps; i++) {
+                const t = i / steps;
+                const midX = MathUtils.lerp(p1.x, p2.x, t) + MathUtils.random(-15, 15);
+                const midY = MathUtils.lerp(p1.y, p2.y, t) + MathUtils.random(-15, 15);
+                ctx.lineTo(midX, midY);
+            }
+            ctx.lineTo(p2.x, p2.y);
+            ctx.stroke();
+            
+            ctx.restore();
+        }
+
+        function renderCursors() {
+            const ctx = UI.ctx;
+            const time = performance.now() * 0.001;
+
+            ['left', 'right'].forEach(side => {
+                const s = STATE[side];
+                if (!s.active) return;
+
+                const color = side === 'left' ? 'rgb(0, 243, 255)' : 'rgb(255, 0, 234)';
+                const hoverColor = side === 'left' ? 'rgba(0, 243, 255, 0.5)' : 'rgba(255, 0, 234, 0.5)';
+                
+                // Draw magnetic connection between thumb and index
+                drawElectricBeam(ctx, s.index, s.thumb, color);
+
+                // Energy ball on Pinch
+                const midX = (s.index.x + s.thumb.x) / 2;
+                const midY = (s.index.y + s.thumb.y) / 2;
+                
+                if (s.isPinched) {
+                    // Size inversely proportional to pinch distance
+                    const pressure = Math.max(0, 1 - (s.pinchDist / CONFIG.pinchThreshold));
+                    const ballSize = 10 + (pressure * 30);
+                    drawEnergyBall(ctx, midX, midY, ballSize, color);
+                }
+
+                // Draw Index Cursor
+                drawHoloRing(ctx, s.index.x, s.index.y, 15, color, time * 2);
+                drawHoloRing(ctx, s.index.x, s.index.y, 22, hoverColor, -time * 1.5, true);
+                
+                // Core dot
+                ctx.beginPath();
+                ctx.arc(s.index.x, s.index.y, 4, 0, Math.PI * 2);
+                ctx.fillStyle = '#fff';
+                ctx.fill();
+
+                // Draw Thumb Node (Smaller)
+                drawHoloRing(ctx, s.thumb.x, s.thumb.y, 10, hoverColor, time);
+            });
+
+            // Draw interaction beam between hands if both active
+            if (STATE.left.active && STATE.right.active) {
+                // If both pinch, draw strong beam, else subtle
+                const color = (STATE.left.isPinched && STATE.right.isPinched) ? 'rgb(255, 255, 255)' : 'rgb(0, 243, 255)';
+                drawElectricBeam(ctx, STATE.left.index, STATE.right.index, color);
+            }
+        }
+
+        function updateUI() {
+            UI.hands.innerText = STATE.handCount;
+            
+            const updateSide = (side, uiState, uiPinch) => {
+                const s = STATE[side];
+                if(s.active) {
+                    uiState.innerText = s.isPinched ? "PINCH / GRAB" : "HOVER";
+                    uiState.className = s.isPinched ? "hud-text-alert font-bold" : "hud-text text-cyan-300";
+                    uiPinch.innerText = s.pinchDist.toFixed(3);
+                } else {
+                    uiState.innerText = "LOST";
+                    uiState.className = "hud-text text-gray-500";
+                    uiPinch.innerText = "0.000";
+                }
+            };
+
+            updateSide('left', UI.lState, UI.lPinch);
+            updateSide('right', UI.rState, UI.rPinch);
+        }
+
+        function renderLoop() {
+            // FPS Calculation
+            frameCount++;
+            const now = Date.now();
+            if (now - lastFpsTime >= 1000) {
+                UI.fps.innerText = frameCount.toFixed(1);
+                frameCount = 0;
+                lastFpsTime = now;
+            }
+
+            // AI Inference
+            if (UI.video.currentTime !== lastVideoTime) {
+                lastVideoTime = UI.video.currentTime;
+                if (handLandmarker) {
+                    const results = handLandmarker.detectForVideo(UI.video, performance.now());
+                    processLandmarks(results);
+                }
+            }
+
+            // Rendering setup
+            UI.ctx.clearRect(0, 0, UI.canvas.width, UI.canvas.height);
+            UI.ctx.globalCompositeOperation = 'lighter'; // Additive blending for neon effect
+
+            // Execute render passes
+            renderCursors();
+            particles.updateAndDraw(UI.ctx);
+            updateUI();
+
+            requestAnimationFrame(renderLoop);
+        }
+
+        // Boot
+        initEngine();
+    </script>
+</body>
+</html>
